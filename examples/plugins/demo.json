@@ -1,0 +1,9 @@
+{
+  "name": "demo",
+  "markers": ["DemoType<"],
+  "transport": {
+    "type": "subprocess",
+    "command": "python3",
+    "args": ["examples/plugins/demo.py"]
+  }
+}

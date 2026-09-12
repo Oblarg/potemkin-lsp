@@ -1,0 +1,27 @@
+# Example Potemkin per-directory server config.
+#
+# Place a `potemkin.toml` at a project root (or any sub-directory) and enable the
+# feature with the `potemkin.multiplex` VS Code setting, or `POTEMKIN_MULTIPLEX=1`
+# when running the `potemkin` binary directly. It is OFF by default.
+#
+# Each `[servers.<id>]` table is matched against the wrapped server's id
+# (POTEMKIN_SERVER_ID, e.g. "rust-analyzer"). Its contents mirror that server's
+# own configuration namespace and are injected as the server's initial settings
+# (`initializationOptions`), with the editor's own settings preserved for any key
+# this file doesn't mention (the file wins on conflicts).
+#
+# Discovery walks up the directory tree and merges nearest-wins, so a file deeper
+# in the tree overrides one closer to the root. Potemkin only spins up a separate
+# backend process for a subtree when its *effective* settings actually differ
+# from the workspace default.
+
+[servers.rust-analyzer]
+# Dotted keys nest: this becomes { "cargo": { "features": ["ci"] } }.
+cargo.features = ["ci"]
+checkOnSave = false
+
+# A different server in the same file is fine; only the table matching the
+# wrapped server's id is used.
+[servers.clangd]
+# Whatever this server accepts in its initializationOptions.
+fallbackFlags = ["-std=c++20"]

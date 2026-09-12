@@ -1,0 +1,22 @@
+[package]
+name = "potemkin-proxy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "A generic, composable-plugin language-server proxy"
+
+[dependencies]
+potemkin-plugin-api = { path = "../potemkin-plugin-api", version = "0.1.0" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+toml = "0.8"
+
+[[bin]]
+name = "potemkin"
+path = "src/main.rs"

@@ -1,0 +1,5 @@
+/target
+# Example WASM plugin build tree (the staged wasm-demo.wasm is kept for the test).
+/examples/plugins/wasm-demo/target
+# WASM host harness deps (bundled into the VSIX at build time).
+/runtime/wasm-host/node_modules

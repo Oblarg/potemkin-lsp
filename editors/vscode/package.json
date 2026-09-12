@@ -1,0 +1,184 @@
+{
+  "name": "potemkin",
+  "displayName": "Potemkin",
+  "description": "Composable, language-agnostic type pretty-printing for your language servers (rust-analyzer, clangd, gopls, and more) via the Potemkin LSP proxy.",
+  "version": "0.1.0",
+  "publisher": "potemkin-lsp",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/potemkin-lsp/potemkin"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "potemkin.enable",
+        "title": "Potemkin: Enable (wrap detected language servers)"
+      },
+      {
+        "command": "potemkin.disable",
+        "title": "Potemkin: Disable (restore language-server settings)"
+      },
+      {
+        "command": "potemkin.restart",
+        "title": "Potemkin: Restart language servers"
+      },
+      {
+        "command": "potemkin.wrapServer",
+        "title": "Potemkin: Wrap a language server\u2026"
+      },
+      {
+        "command": "potemkin.status",
+        "title": "Potemkin: Show status"
+      },
+      {
+        "command": "potemkin.showPlugins",
+        "title": "Potemkin: Show installed plugins"
+      },
+      {
+        "command": "potemkin.showBinaryPath",
+        "title": "Potemkin: Show bundled binary path"
+      }
+    ],
+    "configuration": {
+      "title": "Potemkin",
+      "properties": {
+        "potemkin.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically wrap detected language servers with the Potemkin proxy on activation."
+        },
+        "potemkin.servers": {
+          "type": "array",
+          "default": [],
+          "markdownDescription": "Additional language servers to wrap, beyond the built-ins (rust-analyzer, clangd, gopls). Each entry describes how to override that server's binary.",
+          "items": {
+            "type": "object",
+            "required": ["id", "pathSetting", "defaultCommand"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier, e.g. \"pylsp\"."
+              },
+              "label": {
+                "type": "string",
+                "description": "Human-readable label."
+              },
+              "extensionId": {
+                "type": "string",
+                "description": "Owning VS Code extension id, used for auto-detection (optional)."
+              },
+              "pathSetting": {
+                "type": "string",
+                "description": "Dotted config path whose value overrides the server binary, e.g. \"clangd.path\"."
+              },
+              "pathSettingField": {
+                "type": "string",
+                "description": "If pathSetting is an object, the field within it holding the server path (e.g. \"gopls\")."
+              },
+              "restartCommand": {
+                "type": "string",
+                "description": "Command id that restarts the server after its path changes."
+              },
+              "defaultCommand": {
+                "type": "string",
+                "description": "Real server command to wrap when no explicit path is configured."
+              },
+              "languages": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "LSP languageIds this server handles (e.g. [\"rust\"]). Forwarded as POTEMKIN_LANGUAGES so only matching-language plugins load."
+              }
+            }
+          }
+        },
+        "potemkin.verbosity": {
+          "type": "number",
+          "default": 0,
+          "description": "Verbosity passed to plugins (POTEMKIN_VERBOSITY). 0 = terse."
+        },
+        "potemkin.unicode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow unicode symbols in pretty-printed output (POTEMKIN_UNICODE)."
+        },
+        "potemkin.pluginsDir": {
+          "type": "string",
+          "default": "",
+          "description": "Optional extra directory of plugin manifests, searched *before* the extension-managed dir (used by companion extensions) and Potemkin's default (~/.config/potemkin/plugins). Leave empty unless you hand-maintain manifests."
+        },
+        "potemkin.pluginOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Explicit application order for plugins (POTEMKIN_PLUGIN_ORDER), earliest first. When several plugins rewrite the same hover/inlay text they run as a chain, each seeing the previous plugin's output, so order matters for *layered* rendering — e.g. list `nholthaus-units` before `typed-linear-algebra` so element unit types are prettified before the matrix pretty-printer wraps them.\n\nList plugin ids (the manifest `name`). Listed plugins run first, in this order; unlisted plugins follow, ordered by their manifest `order` then name. Overrides each plugin's manifest `order`. Leave empty to use the authors' declared ordering."
+        },
+        "potemkin.pluginTimeoutMs": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "markdownDescription": "Default per-plugin timeout in milliseconds (POTEMKIN_PLUGIN_TIMEOUT_MS) for a single `initialize`/`transform` round trip. If a plugin exceeds it, Potemkin kills that plugin and drops it for the session — its text passes through untouched — so a hung or pathologically slow plugin can never stall a hover or inlay hint. A plugin's own manifest `timeout_ms` overrides this. Leave at `0` to use Potemkin's built-in default (5000 ms)."
+        },
+        "potemkin.multiplex": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable per-directory language-server configuration (POTEMKIN_MULTIPLEX). **Last resort:** when on, Potemkin runs a separate backend process for each subtree whose `potemkin.toml` overrides the server's settings, so different directories get genuinely different config. This is heavier than a single session (each backend indexes its view of the tree) and is only needed for servers that can't do this themselves. Off by default; the common path is a transparent single-backend proxy."
+        },
+        "potemkin.raw": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "Per-language-server rendering of the **Raw:** section that Potemkin appends below a pretty-printed hover (showing the original, pre-transform type). This is a property of the *server's* hover format, so it is configured per server rather than per plugin.\n\nKeys are server ids (`rust-analyzer`, `clangd`, `gopls`, or a custom server id). Each value may set:\n- `enabled` (boolean) — show the section at all.\n- `label` (string) — header text, e.g. `\"Raw:\"` (empty to omit).\n- `fence` (string) — a code-fence language such as `\"rust\"` for markdown hovers; use `\"\"` for plaintext hovers (e.g. clangd's).\n- `separator` (boolean) — prepend a `---` rule.\n\nOmitted keys/fields fall back to sensible built-in defaults (markdown + `rust`/`go` fence for rust-analyzer/gopls; plaintext for clangd).",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "description": "Show the Raw: section for this server."
+              },
+              "label": {
+                "type": "string",
+                "description": "Header text above the raw type (empty to omit)."
+              },
+              "fence": {
+                "type": "string",
+                "description": "Code-fence language for the raw body (e.g. \"rust\"); empty for plaintext hovers."
+              },
+              "separator": {
+                "type": "boolean",
+                "description": "Prepend a markdown --- rule before the section."
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18 && npm run compile:wasm-host",
+    "compile:wasm-host": "bash scripts/stage-wasm-host.sh",
+    "watch": "npm run compile -- --watch",
+    "test": "npm run compile && node scripts/test-activation.js",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.75.0",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.4.0"
+  }
+}

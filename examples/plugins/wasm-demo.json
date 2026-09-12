@@ -1,0 +1,8 @@
+{
+  "name": "wasm-demo",
+  "markers": ["WasmType<"],
+  "transport": {
+    "type": "wasm",
+    "path": "examples/plugins/wasm-demo.wasm"
+  }
+}

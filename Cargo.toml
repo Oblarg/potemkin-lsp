@@ -1,0 +1,26 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/potemkin-plugin-api",
+    "crates/potemkin-proxy",
+]
+# The example WASM plugin builds for wasm32 with its own profile/deps; keep it out
+# of the host workspace so a normal `cargo build` doesn't try to compile it.
+exclude = [
+    "examples/plugins/wasm-demo",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/potemkin-lsp/potemkin"
+authors = ["Potemkin contributors"]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+log = "0.4"
+env_logger = "0.11"

@@ -1,0 +1,11 @@
+{
+  "name": "potemkin-wasm-host",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node harness that runs Potemkin WASM plugins via the extism JS SDK",
+  "type": "commonjs",
+  "main": "host.js",
+  "dependencies": {
+    "@extism/extism": "^1.0.3"
+  }
+}

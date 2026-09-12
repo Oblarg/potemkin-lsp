@@ -1,0 +1,8 @@
+{
+  "name": "demo-js",
+  "markers": ["JsType<"],
+  "transport": {
+    "type": "js",
+    "path": "examples/plugins/demo.js"
+  }
+}
